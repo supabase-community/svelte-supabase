@@ -1,0 +1,20 @@
+{
+  "name": "svelte-supabase",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "keywords": [
+    "svelte",
+    "sveltekit",
+    "svelte-kit",
+    "supabase"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joshnuss/svelte-supabase.git"
+  },
+  "preset": "preset.js",
+  "devDependencies": {
+    "apply": "^0.2.13"
+  }
+}
