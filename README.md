@@ -1,4 +1,4 @@
-Add Supabase to Svelte
+Adds Supabase to Svelte
 ----------------------
 
 ## ❓ What is this?
