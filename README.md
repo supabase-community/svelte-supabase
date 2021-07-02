@@ -14,7 +14,7 @@ npm init svelte@next
 Once that is set up, run this command in your project directory to set up Supabase:
 
 ```sh
-npx svelte-add joshnuss/svelte-supabase
+npx apply joshnuss/svelte-supabase
 ```
 
 After the preset runs,
