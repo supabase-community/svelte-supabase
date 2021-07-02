@@ -7,14 +7,6 @@ Preset.option('local', false)
 Preset.editNodePackages().addDev("@supabase/supabase-js", "^1.8.0").withTitle("Installing `@supabase/supabase-js`")
 Preset.editNodePackages().addDev("supabase", "^0.3.0").withTitle("Installing `supabase`").ifHasOption('local')
 
-if (fs.existsSync('yarn.lock')) {
-  Preset.execute('yarn').withTitle("Updating dependencies with yarn...")
-} else if (fs.existsSync('package-lock.json')) {
-  Preset.execute('npm', 'install').withTitle("Updating dependencies with npm...")
-} else if (fs.existsSync('pnpm-lock.yaml')) {
-  Preset.execute('pnpm', 'install').withTitle("Updating dependencies with pnpm...")
-}
-
 //Preset.execute('npx supabase init').withTitle("Initializing local supabase").ifHasOption('local')
 
 Preset.env().createIfMissing()
@@ -44,7 +36,10 @@ Preset.extract().to('src/lib')
 Preset.instruct([
   `Configure your supabase environment vars in your ${color.green('.env')} file`,
   `You can access the db via ${color.green("import supabase from '$lib/db'")}`
-]).withHeading('Completing setup')
+]).withHeading('Configure database')
+
+Preset.instruct(`Run ${color.magenta("npm install")}, ${color.magenta("pnpm install")}, or ${color.magenta("yarn")} to install dependencies`)
+  .withHeading('Completing setup')
 
 // Preset.instruct([
 //   `Initialize the local db with ${color.green('npx supabase init')}`,
