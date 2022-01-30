@@ -10,7 +10,7 @@
 			<a
 				sveltekit:prefetch
 				aria-label="sign up"
-href={`/auth/signup?redirect=${encodeURIComponent(redirect)}`}
+				href={`/auth/signup?redirect=${encodeURIComponent(redirect)}`}
 			>
 				Sign up here
 			</a>
