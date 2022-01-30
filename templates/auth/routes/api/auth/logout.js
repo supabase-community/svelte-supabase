@@ -1,10 +1,9 @@
-import { parse as cookieParse } from 'cookie-es';
 import supabase from '$lib/db';
-import { getDeletedCookies, validateRedirect } from '$lib/auth/helper';
+import { updateAuthCookie, validateRedirect } from '$lib/auth/helper';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export const post = async ({ request }) => {
-	const cookies = cookieParse(request.headers.get('cookie')) || '';
+export const post = async (event) => {
+	const { request, locals } = event;
 
 	const body = await request.formData();
 	let redirect = body.get('redirect')?.toString() || '/';
@@ -13,16 +12,20 @@ export const post = async ({ request }) => {
 		redirect = '/';
 	}
 
-	if (cookies.access_token) {
-		await supabase.auth.signOut(cookies.access_token);
+	if (locals.token) {
+		await supabase.auth.signOut(locals.token);
 	}
 
-	return {
+	const response = {
 		status: 302,
-		body: 'success',
+		body: {
+			event: 'SIGNED_OUT'
+		},
 		headers: {
-			'set-cookie': getDeletedCookies(),
 			location: redirect || '/'
 		}
 	};
+
+	updateAuthCookie(request, response);
+	return response;
 };

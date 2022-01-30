@@ -1,3 +1,4 @@
+import {toExpressRequest, toExpressResponse} from '$lib/auth/expressify';
 import supabase from '$lib/db';
 
 /** @type {(path: string, method: 'signIn' | 'signUp') => import('@sveltejs/kit').RequestHandler} */
@@ -18,12 +19,22 @@ export const createHandler = (path, method) =>
 			return getErrorResponse(error.message, redirect, path);
 		}
 
-		return getSuccessResponse(session, redirect);
+		const response = getSuccessResponse(session, redirect);
+		updateAuthCookie(request, response);
+		return response;
 	};
 
 
 /** @type {(redirect: string) => boolean} */
 export const validateRedirect = (redirect) => /^\/\w?/.test(redirect);
+
+export const updateAuthCookie = async (request, response) => {
+	const expressResponse = await toExpressResponse(response);
+	const expressRequest = toExpressRequest(request);
+	expressRequest.body = expressResponse.body;
+	supabase.auth.api.setAuthCookie(expressRequest, expressResponse)
+	response.headers['set-cookie'] = expressResponse.getHeader('set-cookie');
+};
 
 const getErrorResponse = (error, redirect, path) => {
 	const params = new URLSearchParams();
@@ -41,33 +52,11 @@ const getErrorResponse = (error, redirect, path) => {
 
 const getSuccessResponse = (session, redirect) => ({
 	status: 302,
-	body: 'success',
+	body: {
+		event: 'SIGNED_IN',
+		session,
+	},
 	headers: {
-		'set-cookie': getCookies(session),
 		location: redirect || '/'
 	}
 });
-
-/** @type {(session: import('@supabase/gotrue-js').Session) => string[]} */
-export const getCookies = (session) => {
-	const cookieOptions = `Path=/;Secure;SameSite=Strict;Expires=${new Date(
-		session.expires_at * 1000
-	).toUTCString()};`;
-
-	return [
-		`access_token=${session.access_token};${cookieOptions}`,
-		`expires_at=${session.expires_at};${cookieOptions}`,
-		`refresh_token=${session.refresh_token};${cookieOptions}`
-	];
-};
-
-/** @type {(session: import('@supabase/gotrue-js').Session) => string[]} */
-export const getDeletedCookies = () => {
-	const cookieOptions = `Path=/;Secure;SameSite=Strict;Expires=${new Date(0).toUTCString()};`;
-
-	return [
-		`access_token=deleted;${cookieOptions}`,
-		`expires_at=deleted;HttpOnly;${cookieOptions}`,
-		`refresh_token=deleted;HttpOnly;${cookieOptions}`
-	];
-};
