@@ -1,13 +1,17 @@
 import {toExpressRequest, toExpressResponse} from '$lib/auth/expressify';
 import supabase from '$lib/db';
 
-/** @type {(path: string, method: 'signIn' | 'signUp') => import('@sveltejs/kit').RequestHandler} */
+/**
+ * @param {string} path
+ * @param {'signIn' | 'signUp'} method
+ * @return {import('@sveltejs/kit').RequestHandler}
+ */
 export const createHandler = (path, method) =>
 	async ({ request }) => {
 		const body = await request.formData();
-		const email = body.get('email');
-		const password = body.get('password');
-		const redirect = body.get('redirect') || '/';
+		const email = body.get('email').toString();
+		const password = body.get('password').toString();
+		const redirect = body.get('redirect').toString() || '/';
 
 		const { session, error } = await supabase.auth[method]({ email, password });
 
@@ -25,15 +29,32 @@ export const createHandler = (path, method) =>
 	};
 
 
-/** @type {(redirect: string) => boolean} */
+/**
+ * @param {string} redirect
+ * @return {boolean}
+ */
 export const validateRedirect = (redirect) => /^\/\w?/.test(redirect);
 
+/**
+ * @param {URL} url
+ * @return {string}
+ */
+export const getRelativePath = (url) =>
+	url.toString().substring(url.origin.length);
+
+/**
+ * @param {Request} request
+ * @param {import('@sveltejs/kit').EndpointOutput} response
+ */
 export const updateAuthCookie = async (request, response) => {
 	const expressResponse = await toExpressResponse(response);
 	const expressRequest = toExpressRequest(request);
 	expressRequest.body = expressResponse.body;
-	supabase.auth.api.setAuthCookie(expressRequest, expressResponse)
-	let cookie = expressResponse.getHeader('set-cookie');
+	supabase.auth.api.setAuthCookie(expressRequest, expressResponse);
+	const cookies = expressResponse.getHeader('set-cookie');
+	let cookie = Array.isArray(cookies)
+		? cookies.find((c) => c.startsWith('sb:token='))
+		: cookies;
 
 	if (cookie) {
 		cookie = cookie.replace('HttpOnly;', '');
@@ -42,6 +63,12 @@ export const updateAuthCookie = async (request, response) => {
 	response.headers['set-cookie'] = cookie;
 };
 
+/**
+ * @param {string} error
+ * @param {string} redirect
+ * @param {string} path
+ * @return {import('@sveltejs/kit').EndpointOutput}
+ */
 const getErrorResponse = (error, redirect, path) => {
 	const params = new URLSearchParams();
 	params.set('error', error);
@@ -56,6 +83,11 @@ const getErrorResponse = (error, redirect, path) => {
 	};
 };
 
+/**
+ * @param {import('@supabase/gotrue-js').Session} session
+ * @param {string} redirect
+ * @return {import('@sveltejs/kit').EndpointOutput}
+ */
 const getSuccessResponse = (session, redirect) => ({
 	status: 302,
 	body: {

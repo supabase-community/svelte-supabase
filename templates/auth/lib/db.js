@@ -4,7 +4,9 @@ import '$lib/auth/cookie-change';
 import { browser } from '$app/env';
 
 const supabase = createClient(
+	/** @type {string} */
   import.meta.env.VITE_SUPABASE_URL,
+	/** @type {string} */
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
