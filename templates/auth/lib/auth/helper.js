@@ -33,7 +33,13 @@ export const updateAuthCookie = async (request, response) => {
 	const expressRequest = toExpressRequest(request);
 	expressRequest.body = expressResponse.body;
 	supabase.auth.api.setAuthCookie(expressRequest, expressResponse)
-	response.headers['set-cookie'] = expressResponse.getHeader('set-cookie');
+	let cookie = expressResponse.getHeader('set-cookie');
+
+	if (cookie) {
+		cookie = cookie.replace('HttpOnly;', '');
+	}
+
+	response.headers['set-cookie'] = cookie;
 };
 
 const getErrorResponse = (error, redirect, path) => {
