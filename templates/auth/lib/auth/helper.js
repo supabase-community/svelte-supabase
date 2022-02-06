@@ -1,4 +1,4 @@
-import {toExpressRequest, toExpressResponse} from '$lib/auth/expressify';
+import { toExpressRequest, toExpressResponse } from '$lib/auth/expressify';
 import supabase from '$lib/db';
 
 /**
@@ -6,7 +6,8 @@ import supabase from '$lib/db';
  * @param {'signIn' | 'signUp'} method
  * @return {import('@sveltejs/kit').RequestHandler}
  */
-export const createHandler = (path, method) =>
+export const createHandler =
+	(path, method) =>
 	async ({ request }) => {
 		const body = await request.formData();
 		const email = body.get('email').toString();
@@ -28,7 +29,6 @@ export const createHandler = (path, method) =>
 		return response;
 	};
 
-
 /**
  * @param {string} redirect
  * @return {boolean}
@@ -37,10 +37,12 @@ export const validateRedirect = (redirect) => /^\/\w?/.test(redirect);
 
 /**
  * @param {URL} url
- * @return {string}
+ * @return {string} the path to use for redirect through /auth endpoints and pages
  */
 export const getRelativePath = (url) =>
-	url.toString().substring(url.origin.length);
+	url.pathname.startsWith('/auth/')
+		? url.searchParams.get('redirect')
+		: url.toString().substring(url.origin.length);
 
 /**
  * @param {Request} request
@@ -52,9 +54,7 @@ export const updateAuthCookie = async (request, response) => {
 	expressRequest.body = expressResponse.body;
 	supabase.auth.api.setAuthCookie(expressRequest, expressResponse);
 	const cookies = expressResponse.getHeader('set-cookie');
-	let cookie = Array.isArray(cookies)
-		? cookies.find((c) => c.startsWith('sb:token='))
-		: cookies;
+	let cookie = Array.isArray(cookies) ? cookies.find((c) => c.startsWith('sb:token=')) : cookies;
 
 	if (cookie) {
 		cookie = cookie.replace('HttpOnly;', '');
@@ -92,7 +92,7 @@ const getSuccessResponse = (session, redirect) => ({
 	status: 302,
 	body: {
 		event: 'SIGNED_IN',
-		session,
+		session
 	},
 	headers: {
 		location: redirect || '/'
