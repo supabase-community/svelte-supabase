@@ -1,12 +1,26 @@
 import supabase from '$lib/db';
-import { updateAuthCookie, validateRedirect } from '$lib/auth/helper';
+import { updateAuthCookies, validateRedirect } from '$lib/auth/helper';
+
+/** @type {import('@sveltejs/kit').RequestHandler} */
+export const get = async (event) => {
+	const { request } = event;
+	const redirect = request.url?.searchParams?.get('redirect');
+
+	return handleLogOut(event, redirect);
+};
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export const post = async (event) => {
-	const { request, locals } = event;
+	const { request } = event;
 
 	const body = await request.formData();
-	let redirect = body.get('redirect')?.toString() || '/';
+	const redirect = body.get('redirect')?.toString() || '/';
+
+	return handleLogOut(event, redirect);
+};
+
+const handleLogOut = async (event, redirect) => {
+	const { locals } = event;
 
 	if (!validateRedirect(redirect)) {
 		redirect = '/';
@@ -26,6 +40,6 @@ export const post = async (event) => {
 		}
 	};
 
-	updateAuthCookie(request, response);
+	updateAuthCookies(response);
 	return response;
 };
