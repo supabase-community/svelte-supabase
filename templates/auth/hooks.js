@@ -59,4 +59,4 @@ export const handle = async ({ event, resolve }) => {
 };
 
 /** @type {import('@sveltejs/kit').GetSession} */
-export const getSession = async (request) => request.locals;
+export const getSession = async (event) => event.locals;
