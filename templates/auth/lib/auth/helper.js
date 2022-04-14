@@ -66,8 +66,12 @@ export const updateAuthCookies = (response, session) => {
  * @return {string[]} The cookies representing the session
  */
 export const getCookies = (session) => [
+	// This works for endpoints but not direct client-side supabase requests. To use those,
+	// either the auth needs to be done client side (e.g. via @sveltejs/adapter-static, which
+	// then may not make much sense to use this at all), or an endpoint must be created which
+	// returns the access_token and then sets it on `supabase.auth.setAuth(token)` client side.
 	serialize('access_token', session?.access_token, {
-		httpOnly: false,
+		httpOnly: true,
 		maxAge: session?.expires_in || -1,
 		path: '/',
 		sameSite: 'strict',
